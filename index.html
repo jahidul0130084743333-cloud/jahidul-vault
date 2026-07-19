@@ -99,12 +99,7 @@
         .player-overlay.active { display:flex; }
         @keyframes scaleUp { from { transform:scale(0.95); opacity:0; } to { transform:scale(1); opacity:1; } }
         .player-container { width:90%; max-width:1100px; max-height:90vh; position:relative; background:#000; border-radius:var(--radius); overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.9); display:flex; flex-direction:column; }
-        
-        /* === 📌 TELEGRAM FIX: ভিডিও লোড হওয়ার পর যেন কালো না থাকে === */
         .player-container iframe { width:100%; height:100%; flex:1; display:none; background:#000; border:none; }
-        .player-container #telegramPlayer { display:none; width:100%; height:100%; flex:1; background:#000; border:none; min-height:400px; } 
-        /* ^ এই লাইনটি খুবই গুরুত্বপূর্ণ: Telegram উইজেটের জন্য ন্যূনতম উচ্চতা নির্ধারণ */
-
         .player-close { position:absolute; top:20px; right:25px; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:32px; cursor:pointer; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center; transition:background 0.2s; z-index:10; }
         .player-close:hover { background:var(--accent); }
 
@@ -146,7 +141,6 @@
     </style>
 </head>
 <body>
-
     <!-- ===== NAVIGATION ===== -->
     <nav class="navbar">
         <div class="logo">JAHIDUL <span>VAULT</span></div>
@@ -213,10 +207,9 @@
             
             <!-- == হাইব্রিড প্লেয়ার সিস্টেম == -->
             <video id="videoPlayer" controls playsinline preload="metadata" style="display:none;"></video>
-            <iframe id="iframePlayer" title="OK.ru Player" src="" allowfullscreen allow="autoplay; encrypted-media" style="display:none; width:100%; height:100%; flex:1; border:none; background:#000;"></iframe>
-            
-            <!-- টেলিগ্রাম প্লেয়ার ডিভ (CSS এর min-height ফিক্স দেওয়া হয়েছে) -->
-            <div id="telegramPlayer" style="display:none; width:100%; height:100%; flex:1; min-height:400px; background:#000;"></div>
+            <!-- ২. আইফ্রেম প্লেয়ার (OK.ru বা Telegram-এর জন্য) -->
+            <!-- আমরা এখন Telegram-এর জন্যও iframe ব্যবহার করব, তাই আলাদা div এর দরকার নেই -->
+            <iframe id="iframePlayer" title="Video Player" src="" allowfullscreen allow="autoplay; encrypted-media" style="display:none; width:100%; height:100%; flex:1; border:none; background:#000;"></iframe>
             <!-- == হাইব্রিড সিস্টেম শেষ == -->
 
             <div class="player-info" id="playerInfo" style="display:none;">
@@ -253,7 +246,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ===== JAVASCRIPT ===== -->
+    <!-- ===== JAVASCRIPT (Fetch from JSON) ===== -->
     <script>
         (function(){
             'use strict';
@@ -293,7 +286,7 @@
                 search: $('searchInput'), genre: $('genreFilter'), movieGrid: $('movieGrid'),
                 featuredGrid: $('featuredGrid'), recentGrid: $('recentGrid'), browseBtn: $('browseBtn'),
                 playerOverlay: $('playerOverlay'), playerClose: $('playerClose'), video: $('videoPlayer'),
-                iframePlayer: $('iframePlayer'), telegramPlayer: $('telegramPlayer'),
+                iframePlayer: $('iframePlayer'), // এখন আমরা শুধু এই একটি iframe ব্যবহার করব
                 playerInfo: $('playerInfo'), playerTitle: $('playerTitle'), playerYear: $('playerYear'),
                 playerLang: $('playerLang'), playerQuality: $('playerQuality'), playerDesc: $('playerDesc'),
                 settingsToggle: $('settingsToggle'), settingsPopup: $('settingsPopup'),
@@ -427,9 +420,7 @@
 
                 dom.video.style.display = 'none';
                 dom.iframePlayer.style.display = 'none';
-                dom.telegramPlayer.style.display = 'none';
                 dom.iframePlayer.src = '';
-                dom.telegramPlayer.innerHTML = '';
                 dom.playerInfo.style.display = 'none';
 
                 const qualities = Object.keys(movie.videos);
@@ -438,26 +429,18 @@
                 const isEmbed = selectedSrc.includes('ok.ru') || selectedSrc.includes('embed') || selectedSrc.includes('iframe') || selectedSrc.includes('t.me');
 
                 if (isEmbed) {
-                    if (selectedSrc.includes('t.me')) {
-                        // Telegram Play
-                        dom.telegramPlayer.style.display = 'block';
-                        dom.playerInfo.style.display = 'block';
+                    dom.iframePlayer.style.display = 'block';
+                    dom.playerInfo.style.display = 'block';
 
+                    if (selectedSrc.includes('t.me')) {
+                        // Telegram-এর জন্য iframe embed লিংক তৈরি করা হচ্ছে
                         let tmePath = selectedSrc.replace('https://t.me/', '');
                         if (tmePath.endsWith('/')) { tmePath = tmePath.slice(0, -1); }
-
-                        dom.telegramPlayer.innerHTML = '';
-                        const widgetScript = document.createElement('script');
-                        widgetScript.async = true;
-                        widgetScript.src = 'https://telegram.org/js/telegram-widget.js?22';
-                        widgetScript.setAttribute('data-telegram-post', tmePath);
-                        widgetScript.setAttribute('data-width', '100%');
-                        dom.telegramPlayer.appendChild(widgetScript);
+                        // অফিশিয়াল iframe embed লিংক ফরম্যাট
+                        dom.iframePlayer.src = `https://t.me/${tmePath}?embed=1&mode=tme`;
                     } else {
-                        // OK.ru Play
-                        dom.iframePlayer.style.display = 'block';
+                        // OK.ru বা অন্যান্য embed লিংক
                         dom.iframePlayer.src = selectedSrc;
-                        dom.playerInfo.style.display = 'block';
                     }
                 } else {
                     // MP4 Play
@@ -474,8 +457,6 @@
             function closePlayer() {
                 dom.iframePlayer.src = '';
                 dom.iframePlayer.style.display = 'none';
-                dom.telegramPlayer.style.display = 'none';
-                dom.telegramPlayer.innerHTML = '';
                 dom.video.pause();
                 dom.video.src = '';
                 dom.video.style.display = 'none';
@@ -557,7 +538,7 @@
                     showToast(state.isFavFilter ? 'Showing Favorites ❤️' : 'Showing All');
                 });
 
-                console.log('✅ JAHIDUL VAULT v1.2.3 — Telegram Height Fixed!');
+                console.log('✅ JAHIDUL VAULT v1.2.4 — Unified Iframe Player for OK.ru & Telegram!');
             }
 
             if (document.readyState === 'loading') {
