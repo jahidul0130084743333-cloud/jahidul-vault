@@ -213,7 +213,7 @@
             <!-- ২. আইফ্রেম প্লেয়ার (OK.ru বা অন্য এম্বেড লিংকের জন্য) -->
             <iframe id="iframePlayer" title="OK.ru Player" src="" allowfullscreen allow="autoplay; encrypted-media" style="display:none; width:100%; height:100%; flex:1; border:none; background:#000;"></iframe>
 
-            <!-- ৩. টেলিগ্রাম প্লেয়ার (Newly Added) -->
+            <!-- ৩. টেলিগ্রাম প্লেয়ার -->
             <div id="telegramPlayer" style="display:none; width:100%; height:100%; flex:1; background:#000;"></div>
             <!-- == হাইব্রিড সিস্টেম শেষ == -->
 
@@ -326,7 +326,7 @@
                 playerClose: $('playerClose'),
                 video: $('videoPlayer'),
                 iframePlayer: $('iframePlayer'),
-                telegramPlayer: $('telegramPlayer'), // New DOM reference
+                telegramPlayer: $('telegramPlayer'),
                 playerInfo: $('playerInfo'),
                 playerTitle: $('playerTitle'),
                 playerYear: $('playerYear'),
@@ -486,7 +486,7 @@
             }
 
             // ======================================================================
-            // 10. PLAYER (UPDATED - SUPPORTS OK.ru, Telegram & Direct MP4)
+            // 10. PLAYER (UPDATED - Telegram Load Fix)
             // ======================================================================
             function openPlayer(movieId) {
                 const movie = movieDatabase.find(m => m.id === movieId);
@@ -516,30 +516,30 @@
                 const qualities = Object.keys(movie.videos);
                 const selectedSrc = movie.videos[qualities[0]] || movie.videos['1080p'];
                 
-                // ===== হাইব্রিড লজিক (আপডেট করা) =====
+                // ===== হাইব্রিড লজিক =====
                 const isEmbed = selectedSrc.includes('ok.ru') || selectedSrc.includes('embed') || selectedSrc.includes('iframe') || selectedSrc.includes('t.me');
 
                 if (isEmbed) {
                     if (selectedSrc.includes('t.me')) {
-                        // --- Telegram এর জন্য আলাদা লজিক ---
+                        // --- Telegram এর জন্য আপডেটেড লজিক ---
                         dom.telegramPlayer.style.display = 'block';
+                        dom.playerInfo.style.display = 'block';
 
-                        // লিংক থেকে চ্যানেল ও মেসেজ আইডি বের করে এম্বেড কোড তৈরি করা (যেমন: Jahidul-netlify/123)
                         let tmePath = selectedSrc.replace('https://t.me/', '');
-                        // শেষের স্ল্যাশ বা '/' থাকলে সরিয়ে ফেলা
                         if (tmePath.endsWith('/')) {
                             tmePath = tmePath.slice(0, -1);
                         }
+
+                        // **আপডেট করা অংশ:** innerHTML এর পরিবর্তে document.createElement ব্যবহার করা হয়েছে
+                        dom.telegramPlayer.innerHTML = ''; // আগের সবকিছু পরিষ্কার করুন
+                        const widgetScript = document.createElement('script');
+                        widgetScript.async = true;
+                        widgetScript.src = 'https://telegram.org/js/telegram-widget.js?22';
+                        widgetScript.setAttribute('data-telegram-post', tmePath);
+                        widgetScript.setAttribute('data-width', '100%');
+                        // data-tg-theme সরানো হয়েছে (এটি অনেক সময় ব্লক করে)
                         
-                        // স্পিনার দেখান (কারণ Telegram লোড হতে সময় নিতে পারে)
-                        // আপনার সিম্পলিফাইড কোডে স্পিনার নেই, তাই আমরা setTimeout দিয়ে দিচ্ছি
-                        // আপাতত সরাসরি লোড হচ্ছে, তাই আমরা শুধু script বসাচ্ছি
-                        
-                        dom.telegramPlayer.innerHTML = `<script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="${tmePath}" data-width="100%" data-tg-theme="dark"><\/script>`;
-                        
-                        // Telegram প্লেয়ার লোড হওয়া পর্যন্ত অপেক্ষা করার দরকার নেই, উইজেট নিজেই লোড হবে
-                        // আমরা ইনফো প্যানেল দেখাব
-                        dom.playerInfo.style.display = 'block';
+                        dom.telegramPlayer.appendChild(widgetScript);
                         // --- Telegram শেষ ---
                     } else {
                         // --- OK.ru এর জন্য পুরাতন লজিক ---
@@ -549,17 +549,12 @@
                         // --- OK.ru শেষ ---
                     }
                 } else {
-                    // ৩. সাধারণ .mp4 লিংক: কাস্টম প্লেয়ার চালু করুন (যদি রাখতে চান)
+                    // ৩. সাধারণ .mp4 লিংক
                     dom.video.style.display = 'block';
                     dom.playerInfo.style.display = 'block';
                     dom.video.src = selectedSrc;
                     dom.video.load();
-
-                    if (state.resume && state.resume[movieId] && state.resume[movieId] > 5) {
-                        // এই লজিক আপনার আগের কোডে ছিল, কিন্তু সিম্পলিফাইডে resume সুইচ চালু নেই। আমরা সহজ রাখছি।
-                    }
                 }
-                // ===== হাইব্রিড লজিক শেষ =====
 
                 dom.playerOverlay.classList.add('active');
                 document.body.style.overflow = 'hidden';
