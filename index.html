@@ -36,10 +36,10 @@
         ::-webkit-scrollbar-thumb { background:var(--accent); border-radius:3px; }
         .container { max-width:1400px; margin:0 auto; padding:0 20px; }
 
-        /* Animations (GPU friendly) */
+        /* Animations */
         @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes slideUp { from { opacity:0; transform:translateY(50px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes toastPop { 0%{opacity:0;transform:scale(0.8) translateY(20px)} 20%{opacity:1;transform:scale(1) translateY(0)} 80%{opacity:1} 100%{opacity:0;transform:scale(0.8) translateY(-20px)} }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* Navigation */
         .navbar { position:sticky; top:0; z-index:1000; height:var(--nav-height); background:rgba(10,10,10,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; padding:0 30px; box-shadow:0 4px 20px rgba(0,0,0,0.6); }
@@ -100,8 +100,18 @@
         @keyframes scaleUp { from { transform:scale(0.95); opacity:0; } to { transform:scale(1); opacity:1; } }
         .player-container { width:90%; max-width:1100px; max-height:90vh; position:relative; background:#000; border-radius:var(--radius); overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.9); display:flex; flex-direction:column; }
         .player-container iframe { width:100%; height:100%; flex:1; display:none; background:#000; border:none; }
+        .player-container video { width:100%; height:100%; flex:1; display:none; background:#000; }
         .player-close { position:absolute; top:20px; right:25px; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:32px; cursor:pointer; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center; transition:background 0.2s; z-index:10; }
         .player-close:hover { background:var(--accent); }
+
+        /* Player Loader (New) */
+        .player-loader { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000; z-index:5; transition:opacity 0.4s ease; }
+        .player-loader.hidden { opacity:0; pointer-events:none; }
+        .spinner { width:50px; height:50px; border:5px solid #333; border-top:5px solid var(--accent); border-radius:50%; animation:spin 1s linear infinite; }
+        .player-info { padding:15px; background:rgba(0,0,0,0.8); color:#fff; display:none; flex-shrink:0; border-top:1px solid var(--border-color); }
+        .player-info h2 { font-size:20px; margin-bottom:5px; }
+        .player-info .meta { font-size:14px; color:var(--text-muted); display:flex; gap:15px; margin-bottom:5px; }
+        .player-info .desc { font-size:14px; color:#bbb; }
 
         .settings-popup { display:none; position:fixed; top:80px; right:20px; width:300px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius); padding:25px; box-shadow:0 20px 60px rgba(0,0,0,0.8); z-index:1001; animation:slideUp 0.3s ease-out; max-height:80vh; overflow-y:auto; }
         .settings-popup.active { display:block; }
@@ -194,7 +204,7 @@
         <div class="footer-logo">JAHIDUL <span>VAULT</span></div>
         <p>© 2026 JAHIDUL VAULT — Built for the true cinephile.</p>
         <div class="build-info">
-            <span>Version: v1.1.0</span>
+            <span>Version: v1.2.0</span>
             <span>Developer: JVUE Team</span>
             <span id="buildDate">Build: #20260713</span>
         </div>
@@ -205,13 +215,15 @@
         <div class="player-container" id="playerContainer">
             <button class="player-close" id="playerClose">✕</button>
             
-            <!-- == হাইব্রিড প্লেয়ার সিস্টেম == -->
-            <video id="videoPlayer" controls playsinline preload="metadata" style="display:none;"></video>
-            <!-- ২. আইফ্রেম প্লেয়ার (OK.ru বা Telegram-এর জন্য) -->
-            <!-- আমরা এখন Telegram-এর জন্যও iframe ব্যবহার করব, তাই আলাদা div এর দরকার নেই -->
-            <iframe id="iframePlayer" title="Video Player" src="" allowfullscreen allow="autoplay; encrypted-media" style="display:none; width:100%; height:100%; flex:1; border:none; background:#000;"></iframe>
-            <!-- == হাইব্রিড সিস্টেম শেষ == -->
+            <!-- লোডিং স্পিনার -->
+            <div class="player-loader" id="playerLoader">
+                <div class="spinner"></div>
+            </div>
 
+            <!-- == হাইব্রিড প্লেয়ার সিস্টেম == -->
+            <video id="videoPlayer" controls playsinline preload="auto" style="display:none;"></video>
+            <iframe id="iframePlayer" title="Video Player" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" style="display:none; width:100%; height:100%; flex:1; border:none; background:#000;"></iframe>
+            
             <div class="player-info" id="playerInfo" style="display:none;">
                 <h2 id="playerTitle">Movie Title</h2>
                 <div class="meta">
@@ -235,7 +247,7 @@
             <span>▶️ Auto-play Next</span>
             <span id="autoPlayLabel">Off</span>
         </div>
-        <div class="info-row"><span>Version</span><span>v1.1.0</span></div>
+        <div class="info-row"><span>Version</span><span>v1.2.0</span></div>
         <div class="info-row"><span>Developer</span><span>JVUE Team</span></div>
         <div class="info-row"><span>Build</span><span>#20260713</span></div>
         <div class="info-row"><span>Favorites</span><span id="favCount">0</span></div>
@@ -246,7 +258,7 @@
     </div>
 
     <!-- ============================================================ -->
-    <!-- ===== JAVASCRIPT (Fetch from JSON) ===== -->
+    <!-- ===== JAVASCRIPT (Optimized for Telegram & Smooth Playback) ===== -->
     <script>
         (function(){
             'use strict';
@@ -286,7 +298,7 @@
                 search: $('searchInput'), genre: $('genreFilter'), movieGrid: $('movieGrid'),
                 featuredGrid: $('featuredGrid'), recentGrid: $('recentGrid'), browseBtn: $('browseBtn'),
                 playerOverlay: $('playerOverlay'), playerClose: $('playerClose'), video: $('videoPlayer'),
-                iframePlayer: $('iframePlayer'), // এখন আমরা শুধু এই একটি iframe ব্যবহার করব
+                iframePlayer: $('iframePlayer'), playerLoader: $('playerLoader'),
                 playerInfo: $('playerInfo'), playerTitle: $('playerTitle'), playerYear: $('playerYear'),
                 playerLang: $('playerLang'), playerQuality: $('playerQuality'), playerDesc: $('playerDesc'),
                 settingsToggle: $('settingsToggle'), settingsPopup: $('settingsPopup'),
@@ -306,9 +318,20 @@
             function showToast(msg) {
                 const old = document.querySelector('.toast'); if (old) old.remove();
                 const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg;
+                Object.assign(t.style, {
+                    position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)',
+                    background: 'var(--bg-surface)', color: 'var(--text-primary)', padding: '12px 25px',
+                    borderRadius: '50px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: '99999',
+                    border: '1px solid var(--border-color)', transition: 'all 0.3s', animation: 'toastPop 2.5s ease-out forwards'
+                });
                 document.body.appendChild(t);
                 setTimeout(() => { if (t.parentNode) t.remove(); }, 2500);
             }
+
+            // CSS keyframe for toast
+            const styleSheet = document.createElement("style");
+            styleSheet.textContent = `@keyframes toastPop { 0%{opacity:0;transform:translateX(-50%) scale(0.8) translateY(20px)} 20%{opacity:1;transform:translateX(-50%) scale(1) translateY(0)} 80%{opacity:1} 100%{opacity:0;transform:translateX(-50%) scale(0.8) translateY(-20px)} }`;
+            document.head.appendChild(styleSheet);
 
             function toggleFav(id) {
                 const idx = state.favorites.indexOf(id);
@@ -402,6 +425,7 @@
                 renderMovies(result, dom.movieGrid, state.isListView);
             }
 
+            // ===== PLAYER LOGIC (Optimized for Telegram & Smooth Playback) =====
             function openPlayer(movieId) {
                 const movie = movieDatabase.find(m => m.id === movieId);
                 if (!movie) return;
@@ -418,6 +442,8 @@
                 dom.playerQuality.textContent = movie.quality;
                 dom.playerDesc.textContent = movie.description;
 
+                // প্লেয়ার লোডার দেখানো শুরু
+                dom.playerLoader.classList.remove('hidden');
                 dom.video.style.display = 'none';
                 dom.iframePlayer.style.display = 'none';
                 dom.iframePlayer.src = '';
@@ -425,25 +451,52 @@
 
                 const qualities = Object.keys(movie.videos);
                 const selectedSrc = movie.videos[qualities[0]] || movie.videos['1080p'];
-                
+
+                // টেলিগ্রাম বা অন্যান্য ইম্বেড লিঙ্ক সনাক্ত করা
                 const isEmbed = selectedSrc.includes('ok.ru') || selectedSrc.includes('embed') || selectedSrc.includes('iframe') || selectedSrc.includes('t.me');
+
+                // ইভেন্ট হ্যান্ডলার সেট করা (লোডার লুকানোর জন্য)
+                const hideLoader = () => { dom.playerLoader.classList.add('hidden'); };
+                const hideLoaderTimeout = setTimeout(hideLoader, 10000); // ১০ সেকেন্ডে টাইমআউট
+
+                dom.video.oncanplaythrough = function() {
+                    clearTimeout(hideLoaderTimeout);
+                    hideLoader();
+                    dom.video.oncanplaythrough = null; // একবারই চলবে
+                };
+                dom.iframePlayer.onload = function() {
+                    clearTimeout(hideLoaderTimeout);
+                    hideLoader();
+                    dom.iframePlayer.onload = null;
+                };
 
                 if (isEmbed) {
                     dom.iframePlayer.style.display = 'block';
                     dom.playerInfo.style.display = 'block';
 
-                    if (selectedSrc.includes('t.me')) {
-                        // Telegram-এর জন্য iframe embed লিংক তৈরি করা হচ্ছে
-                        let tmePath = selectedSrc.replace('https://t.me/', '');
-                        if (tmePath.endsWith('/')) { tmePath = tmePath.slice(0, -1); }
-                        // অফিশিয়াল iframe embed লিংক ফরম্যাট
-                        dom.iframePlayer.src = `https://t.me/${tmePath}?embed=1&mode=tme`;
-                    } else {
-                        // OK.ru বা অন্যান্য embed লিংক
+                    try {
+                        // টেলিগ্রাম লিঙ্ক ফরম্যাট ঠিক করা
+                        const url = new URL(selectedSrc);
+                        if (url.hostname === 't.me') {
+                            let finalUrl = selectedSrc;
+                            // embed=1 যুক্ত করা (যদি না থাকে)
+                            if (!finalUrl.includes('embed=1')) {
+                                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'embed=1&mode=tme';
+                            }
+                            // autoplay=1 যুক্ত করা (যদি না থাকে)
+                            if (!finalUrl.includes('autoplay=1')) {
+                                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
+                            }
+                            dom.iframePlayer.src = finalUrl;
+                        } else {
+                            dom.iframePlayer.src = selectedSrc;
+                        }
+                    } catch(e) {
+                        // URL পার্স করতে না পারলে সরাসরি লিঙ্ক বসানো
                         dom.iframePlayer.src = selectedSrc;
                     }
                 } else {
-                    // MP4 Play
+                    // MP4 বা ডাইরেক্ট ভিডিও লিঙ্ক
                     dom.video.style.display = 'block';
                     dom.playerInfo.style.display = 'block';
                     dom.video.src = selectedSrc;
@@ -461,6 +514,7 @@
                 dom.video.src = '';
                 dom.video.style.display = 'none';
                 dom.playerInfo.style.display = 'none';
+                dom.playerLoader.classList.add('hidden'); // লোডার লুকানো
                 
                 dom.playerOverlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
@@ -538,7 +592,7 @@
                     showToast(state.isFavFilter ? 'Showing Favorites ❤️' : 'Showing All');
                 });
 
-                console.log('✅ JAHIDUL VAULT v1.2.4 — Unified Iframe Player for OK.ru & Telegram!');
+                console.log('✅ JAHIDUL VAULT v1.2.0 — Optimized for Telegram & Smooth Playback!');
             }
 
             if (document.readyState === 'loading') {
