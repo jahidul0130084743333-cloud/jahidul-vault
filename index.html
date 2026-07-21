@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>JAHIDUL VAULT — Premium OTT Movie Vault</title>
     <style>
-        /* ===== CSS (Optimized) ===== */
+        /* ===== CSS (Optimized & Full Structure) ===== */
         :root {
             --bg-primary: #0a0a0a;
             --bg-surface: #181818;
@@ -40,6 +40,8 @@
         @keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
         @keyframes slideUp { from { opacity:0; transform:translateY(50px); } to { opacity:1; transform:translateY(0); } }
         @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes toastPop { 0%{opacity:0;transform:scale(0.8) translateY(20px)} 20%{opacity:1;transform:scale(1) translateY(0)} 80%{opacity:1} 100%{opacity:0;transform:scale(0.8) translateY(-20px)} }
+        @keyframes skeletonPulse { 0%{background:#333} 50%{background:#444} 100%{background:#333} }
 
         /* Navigation */
         .navbar { position:sticky; top:0; z-index:1000; height:var(--nav-height); background:rgba(10,10,10,0.95); backdrop-filter:blur(10px); border-bottom:1px solid var(--border-color); display:flex; align-items:center; justify-content:space-between; padding:0 30px; box-shadow:0 4px 20px rgba(0,0,0,0.6); }
@@ -82,7 +84,6 @@
         .movie-card.list-view .movie-info { flex:1; padding:10px 0; }
         .movie-poster { width:100%; height:320px; object-fit:cover; background:#222; display:block; }
         .skeleton-poster { animation:skeletonPulse 1.5s infinite; background:#333; }
-        @keyframes skeletonPulse { 0%{background:#333} 50%{background:#444} 100%{background:#333} }
         .movie-info { padding:16px 18px 20px; position:relative; }
         .movie-info h3 { font-size:18px; font-weight:600; margin-bottom:6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-right:30px; }
         .movie-meta { display:flex; gap:12px; font-size:14px; color:var(--text-muted); margin-bottom:8px; flex-wrap:wrap; }
@@ -94,25 +95,29 @@
         .fav-btn.active { color:#ff3b30; }
         .no-results { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--text-muted); font-size:22px; border:1px dashed var(--border-color); border-radius:var(--radius); }
 
-        /* Player Overlay */
+        /* Player Overlay (Dual System) */
         .player-overlay { display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center; animation:scaleUp 0.4s ease-out; }
         .player-overlay.active { display:flex; }
         @keyframes scaleUp { from { transform:scale(0.95); opacity:0; } to { transform:scale(1); opacity:1; } }
         .player-container { width:90%; max-width:1100px; max-height:90vh; position:relative; background:#000; border-radius:var(--radius); overflow:hidden; box-shadow:0 30px 80px rgba(0,0,0,0.9); display:flex; flex-direction:column; }
-        .player-container iframe { width:100%; height:100%; flex:1; display:none; background:#000; border:none; }
-        .player-container video { width:100%; height:100%; flex:1; display:none; background:#000; }
         .player-close { position:absolute; top:20px; right:25px; background:rgba(0,0,0,0.6); color:#fff; border:none; font-size:32px; cursor:pointer; border-radius:50%; width:50px; height:50px; display:flex; align-items:center; justify-content:center; transition:background 0.2s; z-index:10; }
         .player-close:hover { background:var(--accent); }
 
-        /* Player Loader (New) */
+        /* Dual Area Players */
         .player-loader { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000; z-index:5; transition:opacity 0.4s ease; }
         .player-loader.hidden { opacity:0; pointer-events:none; }
         .spinner { width:50px; height:50px; border:5px solid #333; border-top:5px solid var(--accent); border-radius:50%; animation:spin 1s linear infinite; }
+        #telegram-player-area { display:none; width:100%; height:100%; flex:1; background:#000; }
+        #telegram-player-area iframe { width:100%; height:100%; border:none; display:block; }
+        #okru-player-area { display:none; width:100%; height:100%; flex:1; background:#000; }
+        #okru-player-area iframe { width:100%; height:100%; border:none; display:block; }
+        
         .player-info { padding:15px; background:rgba(0,0,0,0.8); color:#fff; display:none; flex-shrink:0; border-top:1px solid var(--border-color); }
         .player-info h2 { font-size:20px; margin-bottom:5px; }
         .player-info .meta { font-size:14px; color:var(--text-muted); display:flex; gap:15px; margin-bottom:5px; }
         .player-info .desc { font-size:14px; color:#bbb; }
 
+        /* Settings */
         .settings-popup { display:none; position:fixed; top:80px; right:20px; width:300px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:var(--radius); padding:25px; box-shadow:0 20px 60px rgba(0,0,0,0.8); z-index:1001; animation:slideUp 0.3s ease-out; max-height:80vh; overflow-y:auto; }
         .settings-popup.active { display:block; }
         .settings-popup h3 { font-size:20px; margin-bottom:15px; color:var(--accent); border-bottom:1px solid var(--border-color); padding-bottom:10px; }
@@ -204,26 +209,29 @@
         <div class="footer-logo">JAHIDUL <span>VAULT</span></div>
         <p>© 2026 JAHIDUL VAULT — Built for the true cinephile.</p>
         <div class="build-info">
-            <span>Version: v1.2.0</span>
+            <span>Version: v1.3.0</span>
             <span>Developer: JVUE Team</span>
             <span id="buildDate">Build: #20260713</span>
         </div>
     </footer>
 
-    <!-- ===== PLAYER OVERLAY ===== -->
+    <!-- ===== PLAYER OVERLAY (DUAL PLAYER SYSTEM) ===== -->
     <div class="player-overlay" id="playerOverlay">
         <div class="player-container" id="playerContainer">
             <button class="player-close" id="playerClose">✕</button>
             
-            <!-- লোডিং স্পিনার -->
-            <div class="player-loader" id="playerLoader">
-                <div class="spinner"></div>
+            <div class="player-loader" id="playerLoader"><div class="spinner"></div></div>
+
+            <!-- 📌 টেলিগ্রামের জন্য ডেডিকেটেড প্লেয়ার (অন্যটি একেবারে মৃত) -->
+            <div id="telegram-player-area">
+                <iframe id="telegramIframe" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
             </div>
 
-            <!-- == হাইব্রিড প্লেয়ার সিস্টেম == -->
-            <video id="videoPlayer" controls playsinline preload="auto" style="display:none;"></video>
-            <iframe id="iframePlayer" title="Video Player" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" style="display:none; width:100%; height:100%; flex:1; border:none; background:#000;"></iframe>
-            
+            <!-- 📌 Ok.ru-এর জন্য ডেডিকেটেড প্লেয়ার (অন্যটি একেবারে মৃত) -->
+            <div id="okru-player-area">
+                <iframe id="okruIframe" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+            </div>
+
             <div class="player-info" id="playerInfo" style="display:none;">
                 <h2 id="playerTitle">Movie Title</h2>
                 <div class="meta">
@@ -247,7 +255,7 @@
             <span>▶️ Auto-play Next</span>
             <span id="autoPlayLabel">Off</span>
         </div>
-        <div class="info-row"><span>Version</span><span>v1.2.0</span></div>
+        <div class="info-row"><span>Version</span><span>v1.3.0</span></div>
         <div class="info-row"><span>Developer</span><span>JVUE Team</span></div>
         <div class="info-row"><span>Build</span><span>#20260713</span></div>
         <div class="info-row"><span>Favorites</span><span id="favCount">0</span></div>
@@ -257,57 +265,21 @@
         </p>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- ===== JAVASCRIPT (Optimized for Telegram & Smooth Playback) ===== -->
     <script>
         (function(){
             'use strict';
-
             const CONFIG = { DEBOUNCE_DELAY: 300, MAX_HISTORY: 20 };
-            const Utils = {
-                debounce: function(func, wait) {
-                    let timeout; return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); };
-                },
-                getTimestamp: function() {
-                    const d = new Date();
-                    return d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
-                }
-            };
-
+            const Utils = { debounce: (func, wait) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), wait); }; } };
             const Storage = {
-                get: function(key, def) {
-                    try { const val = localStorage.getItem('jahidul_' + key); return val ? JSON.parse(val) : def; } catch { return def; }
-                },
-                set: function(key, val) {
-                    try { localStorage.setItem('jahidul_' + key, JSON.stringify(val)); } catch {}
-                },
-                getFavorites: function() { return this.get('favs', []); },
-                setFavorites: function(favs) { this.set('favs', favs); },
-                getHistory: function() { return this.get('history', []); },
-                setHistory: function(hist) { this.set('history', hist); },
-                getTheme: function() { return this.get('theme', 'dark'); },
-                setTheme: function(theme) { this.set('theme', theme); },
-                getAutoPlay: function() { return this.get('autoplay', false); },
-                setAutoPlay: function(val) { this.set('autoplay', val); }
+                get: (key, def) => { try { const val = localStorage.getItem('jahidul_' + key); return val ? JSON.parse(val) : def; } catch { return def; } },
+                set: (key, val) => { try { localStorage.setItem('jahidul_' + key, JSON.stringify(val)); } catch {} },
+                getFavorites: function() { return this.get('favs', []); }, setFavorites: function(favs) { this.set('favs', favs); },
+                getHistory: function() { return this.get('history', []); }, setHistory: function(hist) { this.set('history', hist); },
+                getTheme: function() { return this.get('theme', 'dark'); }, setTheme: function(theme) { this.set('theme', theme); },
+                getAutoPlay: function() { return this.get('autoplay', false); }, setAutoPlay: function(val) { this.set('autoplay', val); }
             };
 
             let movieDatabase = [];
-
-            const $ = (id) => document.getElementById(id);
-            const dom = {
-                search: $('searchInput'), genre: $('genreFilter'), movieGrid: $('movieGrid'),
-                featuredGrid: $('featuredGrid'), recentGrid: $('recentGrid'), browseBtn: $('browseBtn'),
-                playerOverlay: $('playerOverlay'), playerClose: $('playerClose'), video: $('videoPlayer'),
-                iframePlayer: $('iframePlayer'), playerLoader: $('playerLoader'),
-                playerInfo: $('playerInfo'), playerTitle: $('playerTitle'), playerYear: $('playerYear'),
-                playerLang: $('playerLang'), playerQuality: $('playerQuality'), playerDesc: $('playerDesc'),
-                settingsToggle: $('settingsToggle'), settingsPopup: $('settingsPopup'),
-                viewToggle: $('viewToggle'), favFilter: $('favFilterToggle'), favCount: $('favCount'),
-                themeToggle: $('themeToggle'), themeLabel: $('themeLabel'),
-                autoPlayToggle: $('autoPlayToggle'), autoPlayLabel: $('autoPlayLabel'),
-                buildDate: $('buildDate')
-            };
-
             const state = {
                 currentFiltered: [], isListView: false, isFavFilter: false,
                 favorites: Storage.getFavorites(), history: Storage.getHistory(),
@@ -328,17 +300,12 @@
                 setTimeout(() => { if (t.parentNode) t.remove(); }, 2500);
             }
 
-            // CSS keyframe for toast
-            const styleSheet = document.createElement("style");
-            styleSheet.textContent = `@keyframes toastPop { 0%{opacity:0;transform:translateX(-50%) scale(0.8) translateY(20px)} 20%{opacity:1;transform:translateX(-50%) scale(1) translateY(0)} 80%{opacity:1} 100%{opacity:0;transform:translateX(-50%) scale(0.8) translateY(-20px)} }`;
-            document.head.appendChild(styleSheet);
-
             function toggleFav(id) {
                 const idx = state.favorites.indexOf(id);
                 if (idx > -1) { state.favorites.splice(idx,1); showToast('Removed from Favorites 💔'); }
                 else { state.favorites.push(id); showToast('Added to Favorites ❤️'); }
                 Storage.setFavorites(state.favorites);
-                dom.favCount.textContent = state.favorites.length;
+                document.getElementById('favCount').textContent = state.favorites.length;
                 filterAndRender();
             }
             function isFav(id) { return state.favorites.indexOf(id) > -1; }
@@ -347,39 +314,16 @@
                 const card = document.createElement('div');
                 card.className = 'movie-card' + (listMode ? ' list-view' : '');
                 card.dataset.id = movie.id;
-
-                const img = document.createElement('img');
-                img.className = 'movie-poster skeleton-poster'; img.src = movie.poster; img.alt = movie.title + ' poster';
-                img.loading = 'lazy';
-                img.onload = () => img.classList.remove('skeleton-poster');
-                img.onerror = () => { img.onerror = null; img.classList.remove('skeleton-poster'); img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="300" height="450" viewBox="0 0 300 450"><rect width="300" height="450" fill="#1a1a1a"/><text x="50%" y="45%" fill="#666" font-size="26" text-anchor="middle" dy=".3em" font-family="sans-serif">🎬</text><text x="50%" y="55%" fill="#888" font-size="14" text-anchor="middle" dy=".3em" font-family="sans-serif">No Poster</text></svg>'); };
-
-                const info = document.createElement('div');
-                info.className = 'movie-info';
-
+                card.innerHTML = `<img class="movie-poster skeleton-poster" src="${movie.poster}" alt="${movie.title} poster" loading="lazy" onerror="this.onerror=null;this.classList.remove('skeleton-poster');this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22450%22><rect width=%22300%22 height=%22450%22 fill=%22%231a1a1a%22/><text x=%2250%25%22 y=%2245%25%22 fill=%22%23666%22 font-size=%2226%22 text-anchor=%22middle%22>🎬</text><text x=%2250%25%22 y=%2255%25%22 fill=%22%23888%22 font-size=%2214%22 text-anchor=%22middle%22>No Poster</text></svg>';">`;
+                const info = document.createElement('div'); info.className = 'movie-info';
                 const favBtn = document.createElement('button');
                 favBtn.className = 'fav-btn' + (isFav(movie.id) ? ' active' : '');
                 favBtn.textContent = isFav(movie.id) ? '❤️' : '🤍';
                 favBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleFav(movie.id); });
-
-                const title = document.createElement('h3'); title.textContent = movie.title;
-                const meta = document.createElement('div'); meta.className = 'movie-meta';
-                const y = document.createElement('span'); y.textContent = movie.year;
-                const l = document.createElement('span'); l.textContent = movie.language;
-                const q = document.createElement('span'); q.className = 'quality'; q.textContent = movie.quality;
-                meta.append(y, l, q);
-
-                const ratingDiv = document.createElement('div');
-                ratingDiv.className = 'movie-rating';
-                const r = movie.rating || 0;
-                let stars = '';
-                for (let i=0; i<5; i++) stars += (i < Math.floor(r)) ? '⭐' : (i === Math.floor(r) && r%1>=0.5 ? '⭐' : '☆');
-                ratingDiv.textContent = stars + ' ' + r.toFixed(1);
-
-                const desc = document.createElement('p'); desc.className = 'movie-desc'; desc.textContent = movie.description;
-
-                info.append(favBtn, title, meta, ratingDiv, desc);
-                card.append(img, info);
+                const stars = Array.from({length:5}, (_,i) => i < Math.floor(movie.rating||0) ? '⭐' : (i === Math.floor(movie.rating||0) && (movie.rating||0)%1>=0.5 ? '⭐' : '☆')).join('');
+                info.innerHTML = `<h3>${movie.title}</h3><div class="movie-meta"><span>${movie.year}</span><span>${movie.language}</span><span class="quality">${movie.quality}</span></div><div class="movie-rating">${stars} ${(movie.rating||0).toFixed(1)}</div><p class="movie-desc">${movie.description}</p>`;
+                info.prepend(favBtn);
+                card.append(info);
                 card.addEventListener('click', () => openPlayer(movie.id));
                 return card;
             }
@@ -388,219 +332,168 @@
                 if (!container) return;
                 container.innerHTML = '';
                 if (listMode) container.classList.add('list-view'); else container.classList.remove('list-view');
-                if (!data || data.length === 0) {
-                    const no = document.createElement('div'); no.className = 'no-results'; no.textContent = '🎭 No Movies Found';
-                    container.appendChild(no); return;
-                }
+                if (!data || data.length === 0) { const no = document.createElement('div'); no.className = 'no-results'; no.textContent = '🎭 No Movies Found'; container.appendChild(no); return; }
                 const frag = document.createDocumentFragment();
-                for (let i=0; i<data.length; i++) { frag.appendChild(createMovieCard(data[i], listMode)); }
+                data.forEach(m => frag.appendChild(createMovieCard(m, listMode)));
                 container.appendChild(frag);
             }
 
-            function renderFeatured() { renderMovies(movieDatabase.slice(0,4), dom.featuredGrid, false); }
+            function renderFeatured() { renderMovies(movieDatabase.slice(0,4), document.getElementById('featuredGrid'), false); }
             function renderRecent() {
-                if (!dom.recentGrid) return;
-                if (state.history.length === 0) {
-                    dom.recentGrid.innerHTML = '<div class="no-results" style="padding:20px;">No watch history yet. Start exploring! 🎬</div>'; return;
-                }
-                const seen = new Set();
-                const recent = [];
+                const grid = document.getElementById('recentGrid');
+                if (state.history.length === 0) { grid.innerHTML = '<div class="no-results" style="padding:20px;">No watch history yet. Start exploring! 🎬</div>'; return; }
+                const seen = new Set(), recent = [];
                 for (let i=0; i<state.history.length && recent.length<4; i++) {
                     const movie = movieDatabase.find(m => m.id === state.history[i]);
                     if (movie && !seen.has(movie.id)) { seen.add(movie.id); recent.push(movie); }
                 }
-                renderMovies(recent, dom.recentGrid, false);
+                renderMovies(recent, grid, false);
             }
 
             function filterAndRender() {
-                const query = dom.search.value.trim().toLowerCase();
-                const genre = dom.genre.value;
-                const result = movieDatabase.filter(m => {
-                    const matchSearch = query === '' || m.title.toLowerCase().includes(query) || m.year.includes(query) || m.language.toLowerCase().includes(query);
-                    const matchGenre = genre === 'all' || m.genre === genre;
-                    const matchFav = !state.isFavFilter || isFav(m.id);
-                    return matchSearch && matchGenre && matchFav;
-                });
+                const query = document.getElementById('searchInput').value.trim().toLowerCase();
+                const genre = document.getElementById('genreFilter').value;
+                const result = movieDatabase.filter(m => 
+                    (query === '' || m.title.toLowerCase().includes(query) || m.year.includes(query) || m.language.toLowerCase().includes(query)) &&
+                    (genre === 'all' || m.genre === genre) &&
+                    (!state.isFavFilter || isFav(m.id))
+                );
                 state.currentFiltered = result;
-                renderMovies(result, dom.movieGrid, state.isListView);
+                renderMovies(result, document.getElementById('movieGrid'), state.isListView);
             }
 
-            // ===== PLAYER LOGIC (Optimized for Telegram & Smooth Playback) =====
+            // ===== DUAL PLAYER LOGIC (PERFECT SEPARATION) =====
             function openPlayer(movieId) {
                 const movie = movieDatabase.find(m => m.id === movieId);
                 if (!movie) return;
 
                 state.history.unshift(movieId);
-                state.history = state.history.filter((id, idx) => state.history.indexOf(id) === idx);
-                if (state.history.length > CONFIG.MAX_HISTORY) state.history = state.history.slice(0, CONFIG.MAX_HISTORY);
+                state.history = [...new Set(state.history)].slice(0, CONFIG.MAX_HISTORY);
                 Storage.setHistory(state.history);
                 renderRecent();
 
-                dom.playerTitle.textContent = movie.title;
-                dom.playerYear.textContent = movie.year;
-                dom.playerLang.textContent = movie.language;
-                dom.playerQuality.textContent = movie.quality;
-                dom.playerDesc.textContent = movie.description;
+                document.getElementById('playerTitle').textContent = movie.title;
+                document.getElementById('playerYear').textContent = movie.year;
+                document.getElementById('playerLang').textContent = movie.language;
+                document.getElementById('playerQuality').textContent = movie.quality;
+                document.getElementById('playerDesc').textContent = movie.description;
 
-                // প্লেয়ার লোডার দেখানো শুরু
-                dom.playerLoader.classList.remove('hidden');
-                dom.video.style.display = 'none';
-                dom.iframePlayer.style.display = 'none';
-                dom.iframePlayer.src = '';
-                dom.playerInfo.style.display = 'none';
+                const overlay = document.getElementById('playerOverlay');
+                const loader = document.getElementById('playerLoader');
+                const tgArea = document.getElementById('telegram-player-area');
+                const okArea = document.getElementById('okru-player-area');
+                const tgIframe = document.getElementById('telegramIframe');
+                const okIframe = document.getElementById('okruIframe');
+                const info = document.getElementById('playerInfo');
 
-                const qualities = Object.keys(movie.videos);
-                const selectedSrc = movie.videos[qualities[0]] || movie.videos['1080p'];
+                // দুটো প্লেয়ারকে সম্পূর্ণ নিষ্ক্রিয় করে শুরু
+                tgArea.style.display = 'none'; okArea.style.display = 'none';
+                tgIframe.src = ''; okIframe.src = '';
+                info.style.display = 'none';
 
-                // টেলিগ্রাম বা অন্যান্য ইম্বেড লিঙ্ক সনাক্ত করা
-                const isEmbed = selectedSrc.includes('ok.ru') || selectedSrc.includes('embed') || selectedSrc.includes('iframe') || selectedSrc.includes('t.me');
+                overlay.classList.add('active');
+                loader.classList.remove('hidden');
 
-                // ইভেন্ট হ্যান্ডলার সেট করা (লোডার লুকানোর জন্য)
-                const hideLoader = () => { dom.playerLoader.classList.add('hidden'); };
-                const hideLoaderTimeout = setTimeout(hideLoader, 10000); // ১০ সেকেন্ডে টাইমআউট
+                const src = movie.videos['1080p'] || movie.videos[Object.keys(movie.videos)[0]];
+                let finalUrl = src;
 
-                dom.video.oncanplaythrough = function() {
-                    clearTimeout(hideLoaderTimeout);
-                    hideLoader();
-                    dom.video.oncanplaythrough = null; // একবারই চলবে
-                };
-                dom.iframePlayer.onload = function() {
-                    clearTimeout(hideLoaderTimeout);
-                    hideLoader();
-                    dom.iframePlayer.onload = null;
-                };
-
-                if (isEmbed) {
-                    dom.iframePlayer.style.display = 'block';
-                    dom.playerInfo.style.display = 'block';
-
-                    try {
-                        // টেলিগ্রাম লিঙ্ক ফরম্যাট ঠিক করা
-                        const url = new URL(selectedSrc);
-                        if (url.hostname === 't.me') {
-                            let finalUrl = selectedSrc;
-                            // embed=1 যুক্ত করা (যদি না থাকে)
-                            if (!finalUrl.includes('embed=1')) {
-                                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'embed=1&mode=tme';
-                            }
-                            // autoplay=1 যুক্ত করা (যদি না থাকে)
-                            if (!finalUrl.includes('autoplay=1')) {
-                                finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'autoplay=1';
-                            }
-                            dom.iframePlayer.src = finalUrl;
-                        } else {
-                            dom.iframePlayer.src = selectedSrc;
-                        }
-                    } catch(e) {
-                        // URL পার্স করতে না পারলে সরাসরি লিঙ্ক বসানো
-                        dom.iframePlayer.src = selectedSrc;
-                    }
-                } else {
-                    // MP4 বা ডাইরেক্ট ভিডিও লিঙ্ক
-                    dom.video.style.display = 'block';
-                    dom.playerInfo.style.display = 'block';
-                    dom.video.src = selectedSrc;
-                    dom.video.load();
+                // 💡 একদম নিখুঁত ডিটেকশন
+                if (src.includes('t.me')) {
+                    if (!finalUrl.includes('?')) finalUrl += '?'; else finalUrl += '&';
+                    finalUrl += 'embed=1&mode=tme&autoplay=1';
+                    tgIframe.src = finalUrl;
+                    tgArea.style.display = 'block';
+                    info.style.display = 'block';
+                } else if (src.includes('ok.ru') || src.includes('videoembed')) {
+                    okIframe.src = finalUrl;
+                    okArea.style.display = 'block';
+                    info.style.display = 'block';
                 }
 
-                dom.playerOverlay.classList.add('active');
+                const hideLoader = () => loader.classList.add('hidden');
+                if (tgArea.style.display === 'block') tgIframe.onload = hideLoader;
+                if (okArea.style.display === 'block') okIframe.onload = hideLoader;
+                setTimeout(hideLoader, 10000);
+
+                document.getElementById('playerClose').onclick = closePlayer;
+                overlay.onclick = (e) => { if (e.target === overlay) closePlayer(); };
                 document.body.style.overflow = 'hidden';
             }
 
             function closePlayer() {
-                dom.iframePlayer.src = '';
-                dom.iframePlayer.style.display = 'none';
-                dom.video.pause();
-                dom.video.src = '';
-                dom.video.style.display = 'none';
-                dom.playerInfo.style.display = 'none';
-                dom.playerLoader.classList.add('hidden'); // লোডার লুকানো
-                
-                dom.playerOverlay.classList.remove('active');
+                document.getElementById('playerOverlay').classList.remove('active');
+                document.getElementById('telegramIframe').src = '';
+                document.getElementById('okruIframe').src = '';
+                document.getElementById('telegram-player-area').style.display = 'none';
+                document.getElementById('okru-player-area').style.display = 'none';
+                document.getElementById('playerInfo').style.display = 'none';
+                document.getElementById('playerLoader').classList.add('hidden');
                 document.body.style.overflow = 'auto';
                 if (state.isSettingsOpen) toggleSettings();
             }
 
             function toggleSettings() {
                 state.isSettingsOpen = !state.isSettingsOpen;
-                dom.settingsPopup.classList.toggle('active', state.isSettingsOpen);
+                document.getElementById('settingsPopup').classList.toggle('active', state.isSettingsOpen);
             }
 
             function toggleTheme() {
                 document.body.classList.toggle('light-theme');
                 const isLight = document.body.classList.contains('light-theme');
-                dom.themeLabel.textContent = isLight ? 'Light' : 'Dark';
+                document.getElementById('themeLabel').textContent = isLight ? 'Light' : 'Dark';
                 Storage.setTheme(isLight ? 'light' : 'dark');
                 showToast(isLight ? '🌞 Light Theme' : '🌙 Dark Theme');
             }
 
             function toggleAutoPlay() {
                 state.autoPlayNext = !state.autoPlayNext;
-                dom.autoPlayLabel.textContent = state.autoPlayNext ? 'On' : 'Off';
+                document.getElementById('autoPlayLabel').textContent = state.autoPlayNext ? 'On' : 'Off';
                 Storage.setAutoPlay(state.autoPlayNext);
                 showToast(state.autoPlayNext ? '▶️ Auto-play Next On' : '▶️ Auto-play Next Off');
             }
 
             async function init() {
                 if (state.isLightTheme) document.body.classList.add('light-theme');
-                dom.themeLabel.textContent = state.isLightTheme ? 'Light' : 'Dark';
-                dom.autoPlayLabel.textContent = state.autoPlayNext ? 'On' : 'Off';
-                dom.favCount.textContent = state.favorites.length;
-                dom.buildDate.textContent = 'Build: #' + Utils.getTimestamp();
+                document.getElementById('themeLabel').textContent = state.isLightTheme ? 'Light' : 'Dark';
+                document.getElementById('autoPlayLabel').textContent = state.autoPlayNext ? 'On' : 'Off';
+                document.getElementById('favCount').textContent = state.favorites.length;
+                document.getElementById('buildDate').textContent = 'Build: #' + new Date().getFullYear() + String(new Date().getMonth()+1).padStart(2,'0') + String(new Date().getDate()).padStart(2,'0');
 
                 try {
                     const response = await fetch('movies.json');
                     if (!response.ok) throw new Error('Failed to load movies.json');
                     movieDatabase = await response.json();
-                    console.log('✅ Movies loaded successfully! Total:', movieDatabase.length);
                 } catch (error) {
-                    console.error('❌ Error loading movies.json:', error);
-                    document.getElementById('movieGrid').innerHTML = '<div class="no-results">❌ Could not load movies. Please check if movies.json exists and run using Live Server.</div>';
+                    document.getElementById('movieGrid').innerHTML = '<div class="no-results">❌ Could not load movies. Please check if movies.json exists.</div>';
                     return;
                 }
 
-                renderFeatured();
-                renderRecent();
-                filterAndRender();
+                renderFeatured(); renderRecent(); filterAndRender();
 
-                dom.search.addEventListener('input', Utils.debounce(filterAndRender, CONFIG.DEBOUNCE_DELAY));
-                dom.genre.addEventListener('change', filterAndRender);
-                dom.browseBtn.addEventListener('click', () => {
-                    document.querySelector('.library-section').scrollIntoView({ behavior: 'smooth' });
-                    dom.search.focus();
-                });
-                dom.playerClose.addEventListener('click', closePlayer);
-                dom.playerOverlay.addEventListener('click', (e) => { if (e.target === dom.playerOverlay) closePlayer(); });
-                dom.settingsToggle.addEventListener('click', (e) => { e.stopPropagation(); toggleSettings(); });
-                document.addEventListener('click', (e) => {
-                    if (state.isSettingsOpen && !dom.settingsPopup.contains(e.target) && e.target !== dom.settingsToggle) {
-                        toggleSettings();
-                    }
-                });
-                dom.themeToggle.addEventListener('click', toggleTheme);
-                dom.autoPlayToggle.addEventListener('click', toggleAutoPlay);
-                dom.viewToggle.addEventListener('click', () => {
+                document.getElementById('searchInput').addEventListener('input', Utils.debounce(filterAndRender, CONFIG.DEBOUNCE_DELAY));
+                document.getElementById('genreFilter').addEventListener('change', filterAndRender);
+                document.getElementById('browseBtn').addEventListener('click', () => { document.querySelector('.library-section').scrollIntoView({ behavior: 'smooth' }); document.getElementById('searchInput').focus(); });
+                document.getElementById('settingsToggle').addEventListener('click', (e) => { e.stopPropagation(); toggleSettings(); });
+                document.addEventListener('click', (e) => { if (state.isSettingsOpen && !document.getElementById('settingsPopup').contains(e.target) && e.target !== document.getElementById('settingsToggle')) toggleSettings(); });
+                document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+                document.getElementById('autoPlayToggle').addEventListener('click', toggleAutoPlay);
+                document.getElementById('viewToggle').addEventListener('click', () => {
                     state.isListView = !state.isListView;
-                    dom.viewToggle.textContent = state.isListView ? '🗂️' : '📋';
-                    renderMovies(state.currentFiltered, dom.movieGrid, state.isListView);
+                    document.getElementById('viewToggle').textContent = state.isListView ? '🗂️' : '📋';
+                    renderMovies(state.currentFiltered, document.getElementById('movieGrid'), state.isListView);
                     showToast(state.isListView ? 'List View' : 'Grid View');
                 });
-                dom.favFilter.addEventListener('click', () => {
+                document.getElementById('favFilterToggle').addEventListener('click', () => {
                     state.isFavFilter = !state.isFavFilter;
-                    dom.favFilter.style.color = state.isFavFilter ? '#ff3b30' : '';
+                    document.getElementById('favFilterToggle').style.color = state.isFavFilter ? '#ff3b30' : '';
                     filterAndRender();
                     showToast(state.isFavFilter ? 'Showing Favorites ❤️' : 'Showing All');
                 });
 
-                console.log('✅ JAHIDUL VAULT v1.2.0 — Optimized for Telegram & Smooth Playback!');
+                console.log('✅ JAHIDUL VAULT v1.3.0 — Dual Player System (Telegram & Ok.ru) Loaded!');
             }
 
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', init);
-            } else {
-                init();
-            }
-
+            document.addEventListener('DOMContentLoaded', init);
         })();
     </script>
 </body>
