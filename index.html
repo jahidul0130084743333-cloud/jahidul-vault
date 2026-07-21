@@ -224,7 +224,8 @@
 
             <!-- 📌 টেলিগ্রামের জন্য ডেডিকেটেড প্লেয়ার (অন্যটি একেবারে মৃত) -->
             <div id="telegram-player-area">
-                <iframe id="telegramIframe" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture"></iframe>
+                <!-- 🔥 পরিবর্তন করা হয়েছে: sandbox যুক্ত করা হয়েছে যাতে টেলিগ্রামে রিডাইরেক্ট না করে -->
+                <iframe id="telegramIframe" src="" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
             </div>
 
             <!-- 📌 Ok.ru-এর জন্য ডেডিকেটেড প্লেয়ার (অন্যটি একেবারে মৃত) -->
